@@ -1,5 +1,8 @@
 # pickledbg
-`pickledbg` is a set of tools used to help analyze, create, and understand Python pickles. Many tools and documentation already exist, including [the official Python pickle documentation](https://docs.python.org/3/library/pickle.html), the [pickletools module for pickle disassembly](https://docs.python.org/3/library/pickletools.html), and the [Julia language's documentation for pickles](https://docs.juliahub.com/Pickle/LAUNc/0.3.2/). `pickledbg` introduces additional pickle-analyzing tools and more comprehensive documentation. `pickledbg.py` is a [GDB](https://www.sourceware.org/gdb/)+[GEF](https://github.com/hugsy/gef)-style debugger, where pickles are unpacked instruction by instruction, showing the Pickle Machine state (stack, metastack, and memo) at each step. `picklecomp.py` (not yet created) is used to make the generation of custom Python pickles easier, specifically intended for CTF pickle jails. Lastly, more extensive and clearer documentation is present in the `pickle_doc/` folder (not yet created), intended for you to understand each opcode, pickles as a whole, and relevant source code from one spot without having to go anywhere else.
+`pickledbg` is a set of tools used to help analyze, create, and understand Python pickles. Many tools and documentation already exist, including [the official Python pickle documentation](https://docs.python.org/3/library/pickle.html), the [pickletools module for pickle disassembly](https://docs.python.org/3/library/pickletools.html), and the [Julia language's documentation for pickles](https://docs.juliahub.com/Pickle/LAUNc/0.3.2/). This repo introduces additional pickle-analyzing tools and more comprehensive documentation. `pickledbg.py` is a [GDB](https://www.sourceware.org/gdb/)+[GEF](https://github.com/hugsy/gef)-style debugger, where pickles are unpacked instruction by instruction, showing the Pickle Machine state (stack, metastack, and memo) at each step. `picklecomp.py` is used to make the generation of custom Python pickles easier, specifically intended for CTF pickle jails. Lastly, more extensive and clearer documentation is present in the `pickle_doc/` folder, intended for you to understand each opcode, pickles as a whole, and relevant source code from one spot without having to go anywhere else.
+
+## Pickle Documentation
+*not yet implemented*
 
 ## `pickledbg.py`
 The current [pickle source code](https://github.com/python/cpython/blob/3.11/Lib/pickle.py) was used as the framework for this debugger, only adding in code and making minor modifications to print out the state and handle commands. The implementation of each opcode was untouched to ensure it behaves exactly as it would when normally being unpickled. The format and designed was meant to look and function similar to GEF, including color schemes.
@@ -55,11 +58,31 @@ pickledbg>
 
 ![](documentation.png)
 
-## `picklecomp.py`
-Work in progress
+### Examples
+Three example pickles have been included in the [examples/](examples/) folder, 2 from CTF reverse engineering problems and 1 hand-crafted Hello World pickle.
 
-## Pickle Documentation
-(work in progress) You can see Python pickle documentation [here](pickle_doc/).
+## `picklecomp.py`
+This script is meant to facilitate creating custom pickles by hand. The usage is fairly simple, you insert the bytes into the `mypickle_arr` variable, then run the script. It will print out the pickle as hex and as bytes, and optionally write it to a file (just uncomment that line).
+
+There are two main ways to create a pickle. You can either use the pickle opcode constants (directly from the `pickle` library) and define custom bytes afterwards, or use the custom-defined opcode functions. The latter is easier, but the former is more flexible.
+ 
+Here's an example. Let's say you want to use the `BININT2` opcode to load the number 1337 onto the stack. The first way of doing it would be:
+
+```python
+mypickle_arr = [
+    BININT2, b'\x39\x05'
+]
+```
+
+The second way would be:
+```python
+mypickle_arr = [
+    binint2(1337)
+]
+```
+
+### Functions
+* Since the built-in function `int()` already exists, the custom function for the `INT` opcode is called `_int()`
 
 ## Notes
-This tool may be periodically updated depending on how lazy I'm feeling. If you run into an issue, feel free to leave a note or make a pull request.
+This tool may be periodically updated depending on how lazy I'm feeling. If you run into a problem, feel free to file an issue or make a pull request.
