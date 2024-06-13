@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pickledbg"
+version = "2.0.0"
+authors = [
+  { name="Legoclones" },
+]
+description = "A suite of tools to help analyze, create, and understand Python pickles"
+readme = "README.md"
+requires-python = ">=3.6"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/Legoclones/pickledbg"
+Issues = "https://github.com/Legoclones/pickledbg/issues"
+
+[project.scripts]
+pickledbg = "pickledbg:main"
