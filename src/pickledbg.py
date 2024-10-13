@@ -642,7 +642,7 @@ class DbgUnpickler:
                 value = klass(*args)
             except TypeError as err:
                 raise TypeError("in constructor for %s: %s" %
-                                (klass.__name__, str(err)), sys.exc_info()[2])
+                                (klass.__name__, str(err)), err.__traceback__)
         else:
             value = klass.__new__(klass)
         self.append(value)
