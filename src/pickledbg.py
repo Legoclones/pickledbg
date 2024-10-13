@@ -473,7 +473,7 @@ class DbgUnpickler:
                 
             elif arg == 'options':
                 print(redify("step-verbose"))
-                print(f"When set to {blueify('true')}, the debugger will print the state of the Pickle Machine after each instruction instead of just the final state.")
+                print(f"When set to {blueify('true')}, the debugger will print the state of the Pickle Machine after each instruction rather than just the final state.")
                 print(yellowify("Default:")+f" {blueify('false')}")
                 print()
                 print(grayify('─'*terminal_width))
