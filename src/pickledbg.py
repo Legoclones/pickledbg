@@ -921,6 +921,7 @@ def main():
     except Exception as e:
         print(redify("[!] Error: could not disassemble pickle file, will try to continue anyway"))
         print(redify(e))
+        pickle_disasm = []
     
     DbgUnpickler(open(sys.argv[1], "rb"), pickle_disasm=pickle_disasm).load()
 
