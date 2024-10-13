@@ -36,10 +36,12 @@ bytes_types = (bytes, bytearray)
 HIGHEST_PROTOCOL = 5
 _NoValue = object()
 
+
 ### CONFIGURE READLINE ###
 argless_commands= ['ni', 'next', 'step', 'step-to', 'start', 'run', 'export', '?', 'exit', 'quit']
 option_commands= {'set':{ 'step-verbose':["true", "false"] }, 'show':["options"],'help':['options']}
 commands ={**{cmd:[] for cmd in argless_commands}, **option_commands}
+
 def completer(text, state):
     buffer = readline.get_line_buffer().split()
     
@@ -56,7 +58,7 @@ def completer(text, state):
             return [cmd for cmd in commands if cmd.startswith(text)]
         return get_options(sub_commands, rest, text)
     
-    options= get_options(commands, buffer, text)
+    options = get_options(commands, buffer, text)
     if state < len(options):
         return options[state]
     else:
@@ -226,8 +228,11 @@ class DbgUnpickler:
         self.disasm_line_no = 0
         self.addresses = [int(line.split(":")[0]) for line in self.pickle_disasm]
         self.curr_addr = lambda: self.addresses[self.disasm_line_no]
-        ### OPTIONS ###
-        self.options = { 'step-verbose':False }
+        self.options = { 'step-verbose': False }
+        if self.pickle_disasm == []:
+            self.disas_failed = True
+        else:
+            self.disas_failed = False
 
     def load(self):
         """Read a pickled object representation from the open file.
@@ -289,7 +294,6 @@ class DbgUnpickler:
             # print current state
             self.disasm_line_no += 1
             self.print_state()
-            
              
         elif inp.startswith("step "):
             if not self.start:
@@ -324,6 +328,10 @@ class DbgUnpickler:
         elif inp.startswith("step-to "):
             if not self.start:
                 print(redify("[!] You must start the debugger first. Try using the 'start' command."))
+                return
+            
+            if self.disas_failed:
+                print(redify("[!] Disassembly failed. Cannot step to a specific instruction."))
                 return
 
             self.last_command = inp
@@ -422,6 +430,7 @@ class DbgUnpickler:
                 print()
                 print(grayify('─'*terminal_width))
                 
+
                 # step
                 print(redify("step"))
                 print("Executes the next given number of instructions and shows the updated Pickle Machine state.")
@@ -429,6 +438,7 @@ class DbgUnpickler:
                 print()
                 print(grayify('─'*terminal_width))
                 
+
                 # step-to
                 print(redify("step-to"))
                 print("Executes instructions until the instruction address is reached and shows the updated Pickle Machine state.")
@@ -440,7 +450,7 @@ class DbgUnpickler:
                 # export 
                 print(redify("export"))
                 print("Writes the disassembly of the pickle to a file. If no filename is specified, the default is 'out.disasm'.")
-                print(yellowify("Syntax:")+' export <filename>')
+                print(yellowify("Syntax:")+' export [filename]')
                 print()
                 print(grayify('─'*terminal_width))
 
@@ -454,6 +464,7 @@ class DbgUnpickler:
                 print(redify("set"))
                 print("Sets an option to a value.")
                 print(yellowify("Syntax:")+' set <option> <value>')
+                print()
                 print(grayify('─'*terminal_width))
                 
                 
