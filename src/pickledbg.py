@@ -33,6 +33,7 @@ from errors import *
 pickle_bytes = b''
 bytes_types = (bytes, bytearray)
 HIGHEST_PROTOCOL = 5
+_NoValue = object()
 
 
 
@@ -865,8 +866,8 @@ class DbgUnpickler:
         stack = self.stack
         state = stack.pop()
         inst = stack[-1]
-        setstate = getattr(inst, "__setstate__", None)
-        if setstate is not None:
+        setstate = getattr(inst, "__setstate__", _NoValue)
+        if setstate is not _NoValue:
             setstate(state)
             return
         slotstate = None
