@@ -474,7 +474,8 @@ class DbgUnpickler:
                 
             elif arg == 'options':
                 print(redify("step-verbose"))
-                print("When set to True, the debugger will print the state of the Pickle Machine after each instruction instead of just the final state.")
+                print(f"When set to {blueify('true')}, the debugger will print the state of the Pickle Machine after each instruction instead of just the final state.")
+                print(yellowify("Default:")+f" {blueify('false')}")
                 print()
                 print(grayify('─'*terminal_width))
             
@@ -500,12 +501,15 @@ class DbgUnpickler:
                 return
 
             if option in self.options:
-                if value == "true":
-                    self.options[option] = True
-                elif value == "false":
-                    self.options[option] = False
+                if type(self.options[option]) == bool:
+                    if value == "true":
+                        self.options[option] = True
+                    elif value == "false":
+                        self.options[option] = False
+                    else:
+                        print(redify("[!] Invalid command. Enter 'set <option> <True/False>' to set this option."))
                 else:
-                    print(redify("[!] Invalid command. Enter 'set <option> <True/False>' to set an option."))
+                    self.options[option] = value # When adding more options, add more checks here
             else:
                 print(redify("[!] Invalid command. Option does not exist."))
             
