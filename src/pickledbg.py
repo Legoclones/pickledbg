@@ -38,9 +38,9 @@ _NoValue = object()
 
 
 ### CONFIGURE READLINE ###
-argless_commands= ['ni', 'next', 'step', 'step-to', 'start', 'run', 'export', '?', 'exit', 'quit']
-option_commands= {'set':{ 'step-verbose':["true", "false"] }, 'show':["options"],'help':['options']}
-commands ={**{cmd:[] for cmd in argless_commands}, **option_commands}
+argless_commands = ['ni', 'next', 'step', 'step-to', 'start', 'run', 'export', '?', 'exit', 'quit']
+option_commands = {'set': { 'step-verbose':["true", "false"] }, 'show': ["options"], 'help': ['options']}
+commands = {**{cmd:[] for cmd in argless_commands}, **option_commands}
 
 def completer(text, state):
     buffer = readline.get_line_buffer().split()

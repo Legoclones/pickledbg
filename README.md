@@ -29,14 +29,35 @@ ran after 'start'.
 Aliases: next
 
 ────────────────────────────────────────────────────────────────────────────────────
+step
+Executes the next given number of instructions and shows the updated Pickle Machine 
+state.
+Syntax: step <number>
+
+────────────────────────────────────────────────────────────────────────────────────
+step-to
+Executes instructions until the instruction address is reached and shows the updated
+Pickle Machine state.
+Syntax: step-to <address>
+
+────────────────────────────────────────────────────────────────────────────────────
 export
 Writes the disassembly of the pickle to a file. If no filename is specified, the
 default is 'out.disasm'.
 Syntax: export [filename]
 
 ────────────────────────────────────────────────────────────────────────────────────
+show options
+Shows the current options and their values.
+
+────────────────────────────────────────────────────────────────────────────────────
+set
+Sets an option to a value.
+Syntax: set <option> <value>
+
+────────────────────────────────────────────────────────────────────────────────────
 help
-Shows this help menu.
+Shows this help menu. Type 'help options' for available options.
 Aliases: ?
 
 ────────────────────────────────────────────────────────────────────────────────────
