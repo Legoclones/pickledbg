@@ -1,5 +1,5 @@
 # pickledbg
-`pickledbg` is a [GDB](https://www.sourceware.org/gdb/)+[GEF](https://github.com/hugsy/gef)-style debugger, where pickles are unpacked instruction by instruction, showing the Pickle Machine state (stack, metastack, and memo) at each step. In addition, clear, extensive, and unified documentation is included for the Pickle Machine and each opcode. This documentation comes from the official source code, complete with added notes from the maintainer (me!).
+`pickledbg` is a [GDB](https://www.sourceware.org/gdb/)+[GEF](https://github.com/hugsy/gef)-style debugger, where pickles are unpacked instruction by instruction, showing the Pickle Machine state (stack, metastack, and memo) at each step. Additional related tools are linked at the bottom of this README.
 
 ## Installation
 ```
@@ -73,9 +73,6 @@ pickledbg>
 
 ![](documentation.png)
 
-## Pickle Documentation
-*work in progress*
-
 ## Changelog
 You can find the changelog [here](./Changelog.md).
 
@@ -85,6 +82,8 @@ If you are interesting in contributing to `pickledbg`, feel free to create an is
 ## Related Resources
 * https://docs.python.org/3/library/pickletools.html
     * Official tool for developers to inspect and disassemble pickles
+* https://github.com/Legoclones/pickledoc
+    * Unofficial pickle documentation
 * https://github.com/trailofbits/fickling
     * Pickle decompiler and static analyzer
 * https://github.com/splitline/Pickora
