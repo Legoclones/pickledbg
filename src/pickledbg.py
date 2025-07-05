@@ -23,7 +23,7 @@ from pickle import _Unpickler, _Unframer, _Stop
 ### LOCAL IMPORTS ###
 from colors import *
 from errors import *
-from util import completer
+from util import *
 
 
 ### CLASSES ###
@@ -74,18 +74,19 @@ class DbgUnpickler(_Unpickler):
             return stopinst.value
 
     def handle_input(self, inp=None):
-
+        """Handles user input for the debugger.
+        
+        If ENTER is pressed without any input, the last command is repeated."""
+        # get input from the user
         if inp is None:
             try:
                 inp = input(greenify("pickledbg>  "))
-            except EOFError:
-                raise PickleDBGError("EOF was reached without a STOP opcode. Exiting...")
-            except KeyboardInterrupt:
+            except (EOFError, KeyboardInterrupt):
                 raise PickleDBGError("Quitting...")
 
-        # Case Insensitive handling
+        # case-insensitive handling
         inp = inp.lower().strip()
-        
+
         if inp == "ni" or inp == "next":
             if not self.start:
                 print(redify("[-] You must start the debugger first. Try using the 'start' command."))
@@ -104,7 +105,7 @@ class DbgUnpickler(_Unpickler):
             # print current state
             self.disasm_line_no += 1
             self.print_state()
-             
+
         elif inp.startswith("step "):
             if not self.start:
                 print(redify("[-] You must start the debugger first. Try using the 'start' command."))
@@ -131,15 +132,15 @@ class DbgUnpickler(_Unpickler):
                 self.disasm_line_no += 1
                 if self.options['step-verbose']:
                     self.print_state()
-                    
+
             if not self.options['step-verbose']:
                 self.print_state()
-        
+
         elif inp.startswith("step-to "):
             if not self.start:
                 print(redify("[-] You must start the debugger first. Try using the 'start' command."))
                 return
-            
+
             if self.disas_failed:
                 print(redify("[-] Disassembly failed. Cannot step to a specific instruction."))
                 return
@@ -159,7 +160,7 @@ class DbgUnpickler(_Unpickler):
             if step_to not in self.addresses:
                 print(redify("[-] Invalid command. Invalid instruction address, check the disassembly."))
                 return
-            
+
             while self.curr_addr() < step_to:
                 # run the next instruction
                 key = self.read(1)
@@ -171,10 +172,10 @@ class DbgUnpickler(_Unpickler):
 
                 # print current state
                 self.disasm_line_no += 1
-                
+
                 if self.options['step-verbose']:
                     self.print_state()
-                
+
             if not self.options['step-verbose']:
                 self.print_state()
 
@@ -189,6 +190,7 @@ class DbgUnpickler(_Unpickler):
             self.print_state()
 
         elif inp == "":
+            # repeat last command
             self.handle_input(self.last_command)
 
         elif inp[:6] == "export":
@@ -222,85 +224,18 @@ class DbgUnpickler(_Unpickler):
             terminal_width = get_terminal_size()[0]
             lengths = (terminal_width - len(f' {arg} '))//2
             print(grayify('─'*lengths)+cyanify(f' {arg} ')+grayify('─'*lengths))
-            
+
             if arg == 'pickledbg help':
+                print_help(terminal_width)
 
-                # start
-                print(redify("start"))
-                print("Starts the debugger, pointing to the first instruction but not executing it. Must only be ran once. To restart debugging, close the program and run it again. Must also be run before stepping through instructions.")
-                print(yellowify("Aliases:")+' run')
-                print()
-                print(grayify('─'*terminal_width))
-
-
-                # ni
-                print(redify("ni"))
-                print("Executes the next instruction and shows the updated Pickle Machine state. Must be ran after 'start'.")
-                print(yellowify("Aliases:")+' next')
-                print()
-                print(grayify('─'*terminal_width))
-                
-
-                # step
-                print(redify("step"))
-                print("Executes the next given number of instructions and shows the updated Pickle Machine state.")
-                print(yellowify("Syntax:")+' step <number>')
-                print()
-                print(grayify('─'*terminal_width))
-                
-
-                # step-to
-                print(redify("step-to"))
-                print("Executes instructions until the instruction address is reached and shows the updated Pickle Machine state.")
-                print(yellowify("Syntax:")+' step-to <address>')
-                print()
-                print(grayify('─'*terminal_width))
-
-
-                # export 
-                print(redify("export"))
-                print("Writes the disassembly of the pickle to a file. If no filename is specified, the default is 'out.disasm'.")
-                print(yellowify("Syntax:")+' export [filename]')
-                print()
-                print(grayify('─'*terminal_width))
-
-                # show options
-                print(redify("show options"))
-                print("Shows the current options and their values.")
-                print()
-                print(grayify('─'*terminal_width))
-
-                # set
-                print(redify("set"))
-                print("Sets an option to a value.")
-                print(yellowify("Syntax:")+' set <option> <value>')
-                print()
-                print(grayify('─'*terminal_width))
-                
-                
-                # help
-                print(redify("help"))
-                print("Shows this help menu. Type 'help options' for available options.")
-                print(yellowify("Aliases:")+' ?')
-                print()
-                print(grayify('─'*terminal_width))
-
-
-                # exit
-                print(redify("exit"))
-                print("Exits the debugger.")
-                print(yellowify("Aliases:")+' quit')
-                print()
-                print(grayify('─'*terminal_width))
-                
             elif arg == 'options':
                 print(redify("step-verbose"))
                 print(f"When set to {blueify('true')}, the debugger will print the state of the Pickle Machine after each instruction rather than just the final state.")
-                print(yellowify("Default:")+f" {blueify('false')}")
+                print(f"{yellowify("Default:")} {blueify('false')}")
                 print()
                 print(grayify('─'*terminal_width))
-            
-        
+
+
         elif inp == "show options":
             self.last_command = inp
 
@@ -310,7 +245,7 @@ class DbgUnpickler(_Unpickler):
             for option in self.options:
                 print(blueify(option)+": "+str(self.options[option]))
             print(grayify('─' * terminal_width))    
-        
+
         elif inp.startswith("set "):
             self.last_command = inp
 
@@ -333,10 +268,10 @@ class DbgUnpickler(_Unpickler):
                     self.options[option] = value # When adding more options, add more checks here
             else:
                 print(redify("[-] Invalid command. Option does not exist."))
-            
+
 
         elif inp == "exit" or inp == "quit":
-            raise _Stop(None)
+            raise PickleDBGError("Quitting...")
 
         else:
             print(redify("[-] Invalid command. Type 'help' for a list of available commands."))
@@ -415,7 +350,7 @@ def main():
     readline.set_completer_delims(' ')
     readline.set_completer(completer)
     readline.parse_and_bind("tab: complete")
-    
+
     try:
         final_value = DbgUnpickler(open(sys.argv[1], "rb"), pickle_disasm=pickle_disasm).load()
         print(greenify("\n[+] Unpickling complete. Final value: ") + cyanify(ascii(final_value)))
