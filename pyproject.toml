@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pickledbg"
-version = "2.1.0"
+version = "2.2.0"
 authors = [
   { name="Legoclones" },
 ]
@@ -13,9 +13,10 @@ readme = "README.md"
 requires-python = ">=3.6"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+license = "MIT"
+license-files = ["LICENSE"]
 
 [project.urls]
 Homepage = "https://github.com/Legoclones/pickledbg"

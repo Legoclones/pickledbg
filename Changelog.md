@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.2.0 (2025-07-04)
+
+### Additions
+* Final value is printed when unpickling is finished without any errors.
+* Dictionaries in lists/tuples are now color-coded.
+* Dictionary keys are now color-coded.
+
+### Changes
+* ‼️**BIG**‼️ Pickledbg has been modified to be a subclass of `pickle._Unpickler` instead of a complete copy of the code. 
+    * Only a few functions are overloaded, all other functions/classes/globals were removed, reducing code size significantly.
+    * This way, as the mainstream Python `_Unpickler` class evolves, pickledbg doesn't require manual updates. Instead, it will use the default `_Unpickler` class for your Python version.
+    * (don't ask me why I didn't do this in the first place, no idea)
+* Some code cleanup including better comments and docstrings, function typing, and splitting up code more.
+
 ## 2.1.0 (2024-10-13)
 
 ### Additions (courtesy of [souvlakias](https://github.com/souvlakias) in [#1](https://github.com/Legoclones/pickledbg/pull/1))
