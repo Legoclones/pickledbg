@@ -72,25 +72,23 @@ class DbgUnpickler(_Unpickler):
                 self.handle_input()
         except _Stop as stopinst:
             return stopinst.value
-        
+
     def handle_input(self, inp=None):
 
         if inp is None:
             try:
                 inp = input(greenify("pickledbg>  "))
             except EOFError:
-                print(redify("\n[+] Exiting..."))
-                raise _Stop(None)
+                raise PickleDBGError("EOF was reached without a STOP opcode. Exiting...")
             except KeyboardInterrupt:
-                print(redify("\n[+] Exiting..."))
-                raise _Stop(None)
+                raise PickleDBGError("Quitting...")
 
         # Case Insensitive handling
         inp = inp.lower().strip()
         
         if inp == "ni" or inp == "next":
             if not self.start:
-                print(redify("[!] You must start the debugger first. Try using the 'start' command."))
+                print(redify("[-] You must start the debugger first. Try using the 'start' command."))
                 return
 
             self.last_command = inp
@@ -109,7 +107,7 @@ class DbgUnpickler(_Unpickler):
              
         elif inp.startswith("step "):
             if not self.start:
-                print(redify("[!] You must start the debugger first. Try using the 'start' command."))
+                print(redify("[-] You must start the debugger first. Try using the 'start' command."))
                 return
 
             self.last_command = inp
@@ -117,7 +115,7 @@ class DbgUnpickler(_Unpickler):
             try:
                 steps = int(inp[5:])
             except:
-                print(redify("[!] Invalid command. Enter 'step <number>' to step through a number of instructions."))
+                print(redify("[-] Invalid command. Enter 'step <number>' to step through a number of instructions."))
                 return
 
             for _ in range(steps):
@@ -139,11 +137,11 @@ class DbgUnpickler(_Unpickler):
         
         elif inp.startswith("step-to "):
             if not self.start:
-                print(redify("[!] You must start the debugger first. Try using the 'start' command."))
+                print(redify("[-] You must start the debugger first. Try using the 'start' command."))
                 return
             
             if self.disas_failed:
-                print(redify("[!] Disassembly failed. Cannot step to a specific instruction."))
+                print(redify("[-] Disassembly failed. Cannot step to a specific instruction."))
                 return
 
             self.last_command = inp
@@ -151,15 +149,15 @@ class DbgUnpickler(_Unpickler):
             try:
                 step_to = int(inp[8:])
             except:
-                print(redify("[!] Invalid command. Enter 'step-to <address>' to step to a specific instruction address."))
+                print(redify("[-] Invalid command. Enter 'step-to <address>' to step to a specific instruction address."))
                 return
 
             if step_to < self.curr_addr():
-                print(redify("[!] Invalid command. You cannot step backwards."))
+                print(redify("[-] Invalid command. You cannot step backwards."))
                 return
 
             if step_to not in self.addresses:
-                print(redify("[!] Invalid command. Invalid instruction address, check the disassembly."))
+                print(redify("[-] Invalid command. Invalid instruction address, check the disassembly."))
                 return
             
             while self.curr_addr() < step_to:
@@ -184,7 +182,7 @@ class DbgUnpickler(_Unpickler):
             self.last_command = inp
 
             if self.start:
-                print(redify("[!] Debugger already started. You must exit and restart the program again."))
+                print(redify("[-] Debugger already started. You must exit and restart the program again."))
                 return
 
             self.start = True
@@ -202,7 +200,7 @@ class DbgUnpickler(_Unpickler):
                 if inp[6] == " ":
                     filename = inp[7:].strip()
                 else:
-                    print(redify("[!] Invalid command. Type 'help' for a list of available commands."))
+                    print(redify("[-] Invalid command. Type 'help' for a list of available commands."))
                     return
 
             print("Exporting disassembly to " + filename + "...")
@@ -211,7 +209,7 @@ class DbgUnpickler(_Unpickler):
                 with open(filename, "w") as tmpfile:
                     pickletools.dis(open(sys.argv[1], "rb"), out=tmpfile)
             except:
-                print(redify("[!] Error: could not export pickle disassembly"))
+                print(redify("[-] Error: could not export pickle disassembly"))
 
         elif inp == '?' or inp.startswith('help'):
             self.last_command = inp
@@ -320,7 +318,7 @@ class DbgUnpickler(_Unpickler):
                 option = inp[4:].split(" ")[0]
                 value = inp[4:].split(" ")[1]
             except:
-                print(redify("[!] Invalid command. Enter 'set <option> <value>' to set an option."))
+                print(redify("[-] Invalid command. Enter 'set <option> <value>' to set an option."))
                 return
 
             if option in self.options:
@@ -330,44 +328,61 @@ class DbgUnpickler(_Unpickler):
                     elif value == "false":
                         self.options[option] = False
                     else:
-                        print(redify("[!] Invalid command. Enter 'set <option> <True/False>' to set this option."))
+                        print(redify("[-] Invalid command. Enter 'set <option> <True/False>' to set this option."))
                 else:
                     self.options[option] = value # When adding more options, add more checks here
             else:
-                print(redify("[!] Invalid command. Option does not exist."))
+                print(redify("[-] Invalid command. Option does not exist."))
             
 
         elif inp == "exit" or inp == "quit":
             raise _Stop(None)
 
         else:
-            print(redify("[!] Invalid command. Type 'help' for a list of available commands."))
+            print(redify("[-] Invalid command. Type 'help' for a list of available commands."))
 
     def print_state(self):
+        """Prints the current state of the Pickle Machine.
+        
+        After another instruction has been consumed by the unpickling process,
+        this function prints the PVM storage areas, including the stack, 
+        metastack, and memo. It also prints the disassembly of the pickle file
+        including the current instruction and 3 instructions before and after
+        it.
+
+        All information is printed after a `clear -x` command to move the data
+        to the top of the terminal windows, *without* clearing the history.
+        """
         system('clear -x')
 
         ### STACK & MEMO ###
         terminal_width = get_terminal_size()[0]
-        print(grayify(''.join(['─' for _ in range(terminal_width-17)]))+cyanify(' stack & memo ')+grayify('───'))
+        print(header('stack & memo', terminal_width))
         print(blueify("stack     ")+": ", colorize_array(self.stack))
-        if self.metastack != []: print(blueify("metastack ")+": ", colorize_array(self.metastack))
+        if self.metastack != []: 
+            print(blueify("metastack ")+": ", colorize_array(self.metastack))
         print(blueify("memo      ")+": ", colorize_dict(self.memo))
 
         ### DISASSEMBLY ###
-        print(grayify(''.join(['─' for _ in range(terminal_width-16)]))+cyanify(' disassembly ')+grayify('───'))
+        print(header('disassembly', terminal_width))
 
         try:
+            # get up to 3 previous instructions
             tmp = '\n   '.join(self.pickle_disasm[max(0,self.disasm_line_no-3):self.disasm_line_no])
             if tmp != '':
                 print('   '+grayify(tmp))
 
-            print(greenify('-> '+self.pickle_disasm[self.disasm_line_no]))
+            # print current instruction
+            print(greenify(' ➤ '+self.pickle_disasm[self.disasm_line_no]))
+
+            # print up to 3 next instructions
             tmp = '\n   '.join(self.pickle_disasm[self.disasm_line_no+1:self.disasm_line_no+4])
             if tmp != '':
                 print('   '+tmp)
         except IndexError:
-            print(redify("[!] Error: could not print disassembly"))
-            
+            print(redify("[-] Error: could not print disassembly"))
+
+        # footer
         print(grayify(''.join(['─' for _ in range(terminal_width)])))
 
 
@@ -383,7 +398,7 @@ def main():
     try:
         pickle_file = open(sys.argv[1], "rb")
     except:
-        print(redify(f"[!] Error: could not open '{sys.argv[1]}'"))
+        print(redify(f"[-] Error: could not open '{sys.argv[1]}'"))
         sys.exit(1)
 
     # get pickletools disassembly
@@ -392,7 +407,7 @@ def main():
         pickletools.dis(pickle_file, out=output)
         pickle_disasm = output.getvalue().split('\n')[:-2]
     except Exception as e:
-        print(redify("[!] Error: could not disassemble pickle file, will try to continue anyway"))
+        print(redify("[-] Error: could not disassemble pickle file, will try to continue anyway"))
         print(redify(str(e)))
         pickle_disasm = []
 
@@ -401,8 +416,11 @@ def main():
     readline.set_completer(completer)
     readline.parse_and_bind("tab: complete")
     
-    final_value = DbgUnpickler(open(sys.argv[1], "rb"), pickle_disasm=pickle_disasm).load()
-    print(greenify("\n[+] Pickle unpickling completed. Final value: ") + cyanify(ascii(final_value)))
+    try:
+        final_value = DbgUnpickler(open(sys.argv[1], "rb"), pickle_disasm=pickle_disasm).load()
+        print(greenify("\n[+] Unpickling complete. Final value: ") + cyanify(ascii(final_value)))
+    except PickleDBGError as e:
+        print(redify("\n[-] "+str(e)))
 
 
 if __name__ == "__main__":

@@ -6,3 +6,6 @@ class PicklingError(PickleError):
 
 class UnpicklingError(PickleError):
     pass
+
+class PickleDBGError(PickleError):
+    pass

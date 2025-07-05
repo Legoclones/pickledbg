@@ -1,3 +1,4 @@
+# Mapping of ANSI color codes to their respective escape sequences.
 colors = {
     "normal"         : "\033[0m",
     "gray"           : "\033[1;38;5;240m",
@@ -19,6 +20,14 @@ colors = {
 
 
 def colorify(text: str, attrs: str) -> str:
+    """Returns a string with the given text colored according to the specified attributes.
+    
+    Args:
+        text (str): The text to color.
+        attrs (str): A space-separated string of attributes to apply, e.g., "red bold underline".
+    Returns:
+        str: The colored text string.
+    """
     msg = [colors[attr] for attr in attrs.split() if attr in colors]
     msg.append(str(text))
     if colors["highlight"] in msg:   msg.append(colors["highlight_off"])
@@ -27,6 +36,8 @@ def colorify(text: str, attrs: str) -> str:
     msg.append(colors["normal"])
     return "".join(msg)
 
+
+### Color-specific functions for convenience ###
 def redify(msg: str) -> str:        return colorify(msg, "red")
 
 def greenify(msg: str) -> str:      return colorify(msg, "green")
@@ -51,7 +62,55 @@ def highlightify(msg: str) -> str:  return colorify(msg, "highlight")
 
 def blinkify(msg: str) -> str:      return colorify(msg, "blink")
 
+
+def color_by_type(element, strip_comma=False) -> str:
+    """Returns a string representation of an element with color based on its type.
+    
+    The following types are linked to specific colors:
+    - str or bytes: pink
+    - dict: cyan
+    - int or float: cyan
+    - list or tuple: yellow
+    - None: blue
+    - Other types: yellow
+    
+    Args:
+        element: The element to colorize.
+    Returns:
+        str: The colored string representation of the element.
+    """
+    if strip_comma:
+        end = ''
+    else:
+        end = ', '
+
+    if type(element) == str or type(element) == bytes:
+        return pinkify(ascii(element))+end
+
+    elif type(element) == dict:
+        return colorize_dict(element)+end
+
+    elif type(element) == int or type(element) == float:
+        return cyanify(ascii(element))+end
+
+    elif type(element) == list or type(element) == tuple:
+        return colorize_array(element)+end
+
+    elif element == None:
+        return blueify(ascii(element))+end
+
+    else:
+        return yellowify(ascii(element))+end
+
+
 def colorize_array(arr: list|tuple) -> str:
+    """Returns a string representation of an array or tuple with colored elements.
+
+    Args:
+        arr (list|tuple): The array or tuple to colorize.
+    Returns:
+        str: The colored string representation of the array or tuple.
+    """
     if type(arr) == list:
         BEGIN = '['
         END = ']'
@@ -62,21 +121,9 @@ def colorize_array(arr: list|tuple) -> str:
     retval = BEGIN
 
     for element in arr:
-        if type(element) == str or type(element) == bytes:
-            retval += pinkify(ascii(element))+", "
-        elif type(element) == dict:
-            retval += ascii(element)+", "
-        elif type(element) == int or type(element) == float:
-            retval += cyanify(ascii(element))+", "
-        elif type(element) == list or type(element) == tuple:
-            retval += colorize_array(element)+", "
-        elif type(element) == dict:
-            retval += colorize_dict(arr[element])+", "
-        elif element == None:
-            retval += blueify(ascii(element))+", "
-        else:
-            retval += yellowify(ascii(element))+", "
+        retval += color_by_type(element)
 
+    # remove the last comma and space
     if retval != BEGIN:
         retval = retval[:-2]+END
     else:
@@ -84,27 +131,20 @@ def colorize_array(arr: list|tuple) -> str:
 
     return retval
 
+
 def colorize_dict(arr: dict) -> str:
+    """Returns a string representation of a dictionary with colored keys and values.
+
+    Args:
+        arr (dict): The dictionary to colorize.
+    Returns:
+        str: The colored string representation of the dictionary.
+    """
     retval = '{'
 
-    for element in arr:
-        retval += ascii(element)+": "
-
-
-        if type(arr[element]) == str or type(arr[element]) == bytes:
-            retval += pinkify(ascii(arr[element]))+", "
-        elif type(arr[element]) == dict:
-            retval += ascii(arr[element])+", "
-        elif type(arr[element]) == int or type(arr[element]) == float:
-            retval += cyanify(ascii(arr[element]))+", "
-        elif type(arr[element]) == list or type(arr[element]) == tuple:
-            retval += colorize_array(arr[element])+", "
-        elif type(arr[element]) == dict:
-            retval += colorize_dict(arr[element])+", "
-        elif arr[element] == None:
-            retval += blueify(ascii(arr[element]))+", "
-        else:
-            retval += yellowify(ascii(arr[element]))+", "
+    for key, value in arr.items():
+        retval += color_by_type(key, strip_comma=True)+': '
+        retval += color_by_type(value)
 
     if retval != '{':
         retval = retval[:-2]+'}'
@@ -112,3 +152,18 @@ def colorize_dict(arr: dict) -> str:
         retval += '}'
 
     return retval
+
+
+def header(hdr_name: str, terminal_width: int) -> str:
+    """Returns a header with the given name, formatted for the terminal width.
+    
+    Args:
+        hdr_name (str): The name of the header to print.
+        terminal_width (int): The width of the terminal.
+    Returns:
+        str: The formatted header string.
+    """
+    header = grayify(''.join(['─' for _ in range(terminal_width-5-len(hdr_name))])) +\
+            cyanify(' '+hdr_name+' ') +\
+            grayify('───')
+    return header
